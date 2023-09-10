@@ -4,24 +4,17 @@ import os
 import re
 
 import discord
-from discord.ext import commands, buttons
+from discord.ext import commands #buttons
 
 import dotenv
 import env
-#import d2, d4, d6, d8, d12, d20
-#from d20 import roll
-#import d2, d4, d6, d8, d12, d20, d100
 import die
 
 ints = discord.Intents.default()
 ints.message_content = True
 
-
 dotenv.load_dotenv()
-#TOKEN = os.getenv('DISCORD_TOKEN')
 TOKEN = env.TOKEN
-#client = discord.Client(intents=ints)
-
 
 class aclient(discord.Client):
     def __init__(self):
@@ -50,22 +43,37 @@ async def on_message(message):
     name = message.author.name
     channel = message.channel
     tokens = re.split(r' ', cmd)
-    reply = lambda x : channel.send(x, reference=message)
     n = len(tokens)
+
+    reply = lambda x : channel.send(x, reference=message)
+    reply2 = lambda x,y : channel.send(x, reference=message, view=y)
+
     if n == 0:
         return
     t0 = tokens[0]
-    if len(t0) <= 2 or t0[0] != '/' or t0[1] != 'd':
+    if len(t0) <= 2:
         return
-    if t0[1] == '0':
+    if t0[0] != '/' or t0[1] != 'd':
+        return
+    if t0 == '/dpc':
+        rolls = die.rolls(2, 10)
+        roll0 = str(rolls[0]-1)+'0'
+        roll1 = str(rolls[1]-1)
+        #button = discord.ui.Button(label='asdf')
+        #view = discord.ui.View()
+        #view.add_item(button)
+        #await reply2(f'{name} rolled special d10s: [{roll0}, {roll1}]', view)
+        await reply2(f'{name} rolled special d10s: [{roll0}, {roll1}]')
+        return
+    if t0[2] == '0':
         await reply(f'{name}\'s die has a leading 0')
         return
     try:
-        args = [int(tokens[1+i]) for i in range(0, n-1)]
+        args = [int(tokens[i]) for i in range(1, n)]
     except:
-        await reply(f'{name}, something wasn\t numeric')
+        await reply(f'{name}, something wasn\'t numeric')
         return
-    #print(f'Tokens = {str(tokens)}')
+
     s = False
     m = 0
     try:
@@ -103,13 +111,15 @@ async def on_message(message):
     except:
         await reply(f'{name}, uncaught exception')
         return
-    #print(f's = {s}, m = {m}')
 
     if n == 1:
         if s:
-            await reply(f'{name}, you need an argument')
+            await reply(f'{name}, insufficient arguments')
         else:
             roll = die.roll(m)
+            if roll == None:
+                await reply(f'I can\'t let you do that, {name}.')
+                return
             await reply(f'{name} rolled {roll}/{m}')
         return
     elif n == 2:
@@ -125,10 +135,22 @@ async def on_message(message):
                 await reply(f'{name}, at most 100 rolls.')
                 return
             rolls = die.rolls(t1,m)
-            line = f'{name} rolled {str(rolls)}/{m}'
-            line = line + f' (for a sum of {sum(rolls)})'
+            if rolls == None:
+                await reply(f'Sorry, {name}, I can\'t.')
+            #line = f'{name} rolled {str(rolls)}/{m}'
+            line = f'{name} rolled ['
+            delim = ''
+            for r in rolls:
+                line = line + delim + f'{r}/{m}'
+                delim = ', '
+            line = line + f'] (for a sum of {sum(rolls)}'
+            line = line + f'/{len(rolls)*m})'
         else:
-            line = f'{name} rolled {die.roll(m,t1)}/{m}'
+            roll = die.roll(m,t1)
+            if roll == None:
+                await reply(f'I can\'t let you do that, {name}.')
+                return
+            line = f'{name} rolled {roll}/{m}'
         await reply(line)
         return
     elif n == 3:
@@ -166,23 +188,30 @@ async def on_message(message):
             return
 
         rolls = die.rolls(t1, m, t2)
-        line = f'{name} rolled {str(rolls)}/{m}'
-        line = line + f' (for a sum of {sum(rolls)})'
+        if rolls == None:
+            await reply(f'Sorry {name}, I can\'t.')
+        line = f'{name} rolled ['
+        delim = ''
+        for r in rolls:
+            line = line + delim + f'{r}/{m}'
+            delim = ', '
+        line = line + f' (for a sum of {sum(rolls)}'
+        line = line + f'/{len(rolls)*m})'
         await reply(line)
         return
 
     return
 
 
-tree = discord.app_commands.CommandTree(client)
-
-@tree.command(name="name", description="description")
-async def slash_command(interaction: discord.Interaction):
-    await interaction.response.send_message("command")
-
-@tree.command(description='Roll 1 d20.', guild=discord.Object(1144036249565397022))
-async def roll20(interaction: discord.Interaction):
-    await interaction.response.send_message(f'User rolled a {d20.roll()} out of 20')
-
+#tree = discord.app_commands.CommandTree(client)
+#
+#@tree.command(name="name", description="description")
+#async def slash_command(interaction: discord.Interaction):
+#    await interaction.response.send_message("command")
+#
+#@tree.command(description='Roll 1 d20.', guild=discord.Object(1144036249565397022))
+#async def roll20(interaction: discord.Interaction):
+#    await interaction.response.send_message(f'User rolled a {d20.roll()} out of 20')
+#
 
 client.run(TOKEN)

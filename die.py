@@ -3,9 +3,13 @@
 import random
 
 def roll(n = 20, mod = 0):
+    if n < 1:
+        return None
     return random.randint(1, n) + mod
 
 def rolls(m, n = 20, mod = 0):
+    if n < 1:
+        return None
     return [roll(n)+mod for i in range(m)]
 
 def toss0(r):
