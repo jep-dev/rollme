@@ -35,6 +35,8 @@ client = aclient()
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
 
+
+
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -213,5 +215,31 @@ async def on_message(message):
 #async def roll20(interaction: discord.Interaction):
 #    await interaction.response.send_message(f'User rolled a {d20.roll()} out of 20')
 #
+
+@client.event
+async def on_reaction_add(reaction, user):
+    g = reaction.message.guild
+    if g.id != 1144036249565397022:
+        return
+    #ch = reaction.message.channel
+    #if ch.id != 1144036250723041434:
+    #    return
+
+    #if not reaction.message.author.bot:
+        #return
+    #if reaction.message.author.id != client.id:
+        #return
+    #print('OKAY!!')
+    em = reaction.emoji
+    #if em != '♻️':
+    #    return
+    if em == '🎲':
+        me = reaction.message.author
+        ch = reaction.message.channel
+        say = lambda x : ch.send(x, reference = reaction.message)
+        roll = die.roll(20)
+        await say(f'Quick-rolled a {roll}/20')
+        return
+    return
 
 client.run(TOKEN)
