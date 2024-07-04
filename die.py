@@ -20,8 +20,9 @@ def toss0(r):
 
 def toss1(r):
     if not r:
-        return None
-    r.remove(max(r))
+		return None
+	else:
+		r.remove(max(r))
     return r
 
 def toss01(r):
